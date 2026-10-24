@@ -27,17 +27,109 @@ async function load(env) {
 const save = async (s) => { if (s.kv) await s.kv.put('db', JSON.stringify(s.d)); };
 const isAdmin = (req, env) => !!(env.ADMIN_TOKEN && req.headers.get('x-admin-token') === env.ADMIN_TOKEN);
 
+const CSS = [
+  '*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}',
+  ':root{--bg:#0b0f14;--card:#141b24;--card2:#1b2530;--line:#243040;--txt:#eaf0f7;--mut:#8fa1b6;--grad:linear-gradient(135deg,#ff8a00,#ff3d68)}',
+  'body{margin:0;background:radial-gradient(1100px 560px at 20% -10%,#1b2a3a 0%,#0b0f14 60%) no-repeat,#0b0f14;color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,system-ui,sans-serif;padding:74px 0 104px}',
+  '.topbar{position:fixed;top:0;left:0;right:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(11,15,20,.84);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);z-index:20}',
+  '.brand{display:flex;gap:10px;align-items:center;font-weight:800;font-size:16px;line-height:1.1}',
+  '.brand small{display:block;font-weight:500;color:var(--mut);font-size:11px;margin-top:2px}',
+  '.logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--grad);font-size:19px;box-shadow:0 8px 20px rgba(255,90,60,.3)}',
+  '.cartbtn{position:relative;background:var(--card);border:1px solid var(--line);color:var(--txt);width:44px;height:44px;border-radius:14px;font-size:18px}',
+  '.count{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:var(--grad);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px}',
+  'main{max-width:720px;margin:0 auto;padding:14px}',
+  '.view{animation:fade .25s ease}',
+  '@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}',
+  '.hidden{display:none}',
+  '.hero{padding:18px;border-radius:20px;background:linear-gradient(140deg,#1c2836,#131a23);border:1px solid var(--line);margin-bottom:14px}',
+  '.hero h1{margin:0 0 6px;font-size:22px}',
+  '.hero p{margin:0;color:var(--mut);font-size:13px;line-height:1.5}',
+  '.h2{font-size:18px;margin:6px 0 12px}',
+  '.grid{display:grid;gap:14px}',
+  '.vcard{background:linear-gradient(160deg,#151d27,#111721);border:1px solid var(--line);border-radius:20px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.3);margin-bottom:12px}',
+  '.vhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}',
+  '.vhead h3{margin:0;font-size:16px}',
+  '.meta{margin:4px 0 0;font-size:12px;color:var(--mut);line-height:1.45}',
+  '.badge{font-size:10px;font-weight:800;letter-spacing:.6px;padding:5px 9px;border-radius:999px;white-space:nowrap}',
+  '.badge.open{background:rgba(34,197,94,.14);color:#4ade80;border:1px solid rgba(34,197,94,.35)}',
+  '.badge.closed{background:rgba(239,68,68,.14);color:#f87171;border:1px solid rgba(239,68,68,.35)}',
+  '.plats{display:grid;gap:8px;margin-top:12px}',
+  '.plat{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:10px 12px}',
+  '.plat b{font-size:14px;font-weight:600;display:block}',
+  '.plat small{color:#ffb347;font-weight:700;font-size:13px}',
+  '.add{width:36px;height:36px;border-radius:12px;border:0;background:var(--grad);color:#fff;font-size:20px;font-weight:700;box-shadow:0 6px 16px rgba(255,90,60,.3);transition:transform .12s}',
+  '.add:active{transform:scale(.9)}',
+  '.add:disabled{opacity:.32;box-shadow:none}',
+  '.card{background:linear-gradient(160deg,#151d27,#111721);border:1px solid var(--line);border-radius:20px;padding:14px;margin-bottom:12px}',
+  '.row{display:flex;justify-content:space-between;font-size:14px;color:var(--mut);padding:6px 0}',
+  '.row b{color:var(--txt)}',
+  '.row.total{border-top:1px dashed var(--line);margin-top:6px;padding-top:10px;font-size:16px;color:var(--txt)}',
+  '.row.total b{color:#ffb347;font-size:18px}',
+  '.form h3{margin:0 0 10px;font-size:15px}',
+  'input,textarea{width:100%;font:inherit;padding:14px;border-radius:14px;border:1px solid var(--line);background:#0e141c;color:var(--txt);margin-bottom:10px;outline:none}',
+  'input:focus,textarea:focus{border-color:#ff8a00;box-shadow:0 0 0 3px rgba(255,138,0,.15)}',
+  'textarea{min-height:78px;resize:vertical}',
+  '.btn-primary{width:100%;padding:16px;border:0;border-radius:16px;background:var(--grad);color:#fff;font-size:16px;font-weight:800;letter-spacing:.3px;box-shadow:0 14px 30px rgba(255,90,60,.32);transition:transform .1s,filter .2s}',
+  '.btn-primary:active{transform:scale(.97);filter:brightness(.9)}',
+  '.btn-primary[disabled]{opacity:.6}',
+  '.tabbar{position:fixed;bottom:0;left:0;right:0;display:flex;background:rgba(13,18,24,.94);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:30}',
+  '.tab{flex:1;background:none;border:0;color:var(--mut);font-size:11px;font-weight:600;display:grid;gap:3px;justify-items:center;padding:8px 4px;border-radius:14px;font-family:inherit}',
+  '.tab span{font-size:20px;line-height:1}',
+  '.tab.active{color:#ffb347;background:rgba(255,138,0,.1)}',
+  '.toast{position:fixed;left:50%;transform:translate(-50%,140%);bottom:108px;background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;padding:14px 18px;border-radius:16px;font-size:14px;font-weight:700;box-shadow:0 16px 40px rgba(34,197,94,.35);transition:transform .35s cubic-bezier(.2,.9,.2,1);z-index:40;max-width:88vw;text-align:center}',
+  '.toast.show{transform:translate(-50%,0)}',
+  '.toast.err{background:linear-gradient(135deg,#dc2626,#ef4444);box-shadow:0 16px 40px rgba(239,68,68,.35)}',
+  '.empty{color:var(--mut);font-size:13px;text-align:center;padding:22px 6px;line-height:1.5}',
+  '.line{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}',
+  '.line:last-child{border-bottom:0}',
+  '.qty{display:flex;align-items:center;gap:8px}',
+  '.qty button{width:30px;height:30px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font-size:15px;font-family:inherit}',
+  '.qty button:active{transform:scale(.92)}'
+].join('');
+
+const JS = [
+  'var cart={vendorId:null,items:[]};var vendors=[];var FEE=__FEE__;var _tt;',
+  'function $(i){return document.getElementById(i)}',
+  'function fcfa(n){var s=(n||0).toLocaleString("fr-FR");s=s.split("\u202f").join(" ").split("\u00a0").join(" ");return s+" FCFA"}',
+  'function api(u,o){return fetch(u,o).then(function(r){return r.json()})}',
+  'function toast(m,err){var t=$("toast");t.textContent=m;t.className="toast show"+(err?" err":"");clearTimeout(_tt);_tt=setTimeout(function(){t.className="toast"+(err?" err":"")},3400)}',
+  'function go(t){["home","cart","orders"].forEach(function(k){$("v-"+k).className="view"+(k===t?"":" hidden")});var b=document.querySelectorAll(".tab");for(var i=0;i<b.length;i++){b[i].className="tab"+(b[i].getAttribute("data-tab")===t?" active":"")}window.scrollTo(0,0);if(t==="cart")renderCart();if(t==="orders")loadOrders()}',
+  'function loadVendors(){api("/api/vendors").then(function(r){vendors=r.vendors||[];renderVendors()}).catch(function(){toast("Reseau indisponible",true)})}',
+  'function renderVendors(){var h="";vendors.forEach(function(v){h+="<article class=\\"vcard\\"><div class=\\"vhead\\"><div><h3>"+v.name+"</h3><p class=\\"meta\\">"+v.category+" &bull; "+v.city+" &bull; &starf; "+v.rating+"</p></div><span class=\\"badge "+(v.open?"open":"closed")+"\\">"+(v.open?"OUVERT":"FERME")+"</span></div><div class=\\"plats\\">";v.products.forEach(function(p){h+="<div class=\\"plat\\"><div><b>"+p.name+"</b><small>"+fcfa(p.price)+"</small></div><button class=\\"add\\" data-v=\\""+v.id+"\\" data-p=\\""+p.id+"\\" "+(v.open?"":"disabled")+">+</button></div>"});h+="</div></article>"});$("vendors").innerHTML=h||"<p class=\\"empty\\">Aucun restaurant disponible.</p>"}',
+  'function add(vid,pid){var v=null,pr=null;vendors.forEach(function(x){if(x.id===vid){v=x;x.products.forEach(function(p){if(p.id===pid)pr=p})}});if(!v||!pr)return;if(cart.vendorId&&cart.vendorId!==vid){cart={vendorId:null,items:[]};toast("Panier vide : un seul restaurant par commande")}cart.vendorId=vid;var it=null;cart.items.forEach(function(x){if(x.productId===pid)it=x});if(it){it.qty++}else{cart.items.push({productId:pid,name:pr.name,price:pr.price,qty:1})}badge();renderCart();toast(pr.name+" ajoute au panier")}',
+  'function badge(){var n=0;cart.items.forEach(function(x){n+=x.qty});$("cartCount").textContent=n}',
+  'function renderCart(){var box=$("cartList"),h="",sub=0;if(!cart.items.length){box.innerHTML="<p class=\\"empty\\">Votre panier est vide.<br>Ajoutez un plat dans l onglet Restaurants.</p>";$("sub").textContent=fcfa(0);$("fee").textContent=fcfa(FEE);$("tot").textContent=fcfa(FEE);return}h+="<div class=\\"card\\">";cart.items.forEach(function(x,i){sub+=x.price*x.qty;h+="<div class=\\"line\\"><div><b>"+x.name+"</b><br><small style=\\"color:#ffb347;font-weight:700\\">"+fcfa(x.price)+"</small></div><div class=\\"qty\\"><button data-i=\\""+i+"\\" data-a=\\"dec\\">&minus;</button><b>"+x.qty+"</b><button data-i=\\""+i+"\\" data-a=\\"inc\\">+</button><button data-i=\\""+i+"\\" data-a=\\"del\\" style=\\"color:#f87171\\">&#128465;</button></div></div>"});h+="</div>";box.innerHTML=h;$("sub").textContent=fcfa(sub);$("fee").textContent=fcfa(FEE);$("tot").textContent=fcfa(sub+FEE)}',
+  'function submitOrder(e){e.preventDefault();if(!cart.items.length){toast("Panier vide : ajoutez un plat",true);return false}var n=$("f-name").value.trim(),p=$("f-phone").value.trim(),a=$("f-addr").value.trim();if(!n||!p||!a){toast("Renseignez nom, telephone et adresse",true);return false}var b=$("submitBtn");b.disabled=true;b.textContent="Envoi en cours...";var body={vendorId:cart.vendorId,items:cart.items.map(function(x){return{productId:x.productId,qty:x.qty}}),customer:{name:n,phone:p,address:a}};api("/api/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)}).then(function(r){b.disabled=false;b.textContent="Valider la commande";if(r.error){toast("Erreur : "+r.error,true);return}toast("Commande "+r.id+" confirmee ! Total "+fcfa(r.total));cart={vendorId:null,items:[]};badge();renderCart();$("form").reset();go("orders")}).catch(function(){b.disabled=false;b.textContent="Valider la commande";toast("Reseau indisponible",true)});return false}',
+  'var ST={pending:["En attente","#f59e0b"],accepted:["Acceptee","#38bdf8"],preparing:["En preparation","#a78bfa"],picked_up:["En livraison","#22d3ee"],delivered:["Livree","#22c55e"],cancelled:["Annulee","#ef4444"]};',
+  'function loadOrders(){api("/api/orders?limit=20").then(function(r){var list=r.orders||[];if(!list.length){$("orders").innerHTML="<p class=\\"empty\\">Aucune commande pour le moment.</p>";return}var h="";list.slice().reverse().forEach(function(o){var st=ST[o.status]||[o.status,"#8fa1b6"];var it=(o.items||[]).map(function(x){return x.qty+" x "+x.name}).join(", ");var dt=new Date(o.createdAt).toLocaleString("fr-FR");h+="<article class=\\"vcard\\"><div class=\\"vhead\\"><div><h3>"+o.id+"</h3><p class=\\"meta\\">"+o.vendorName+" &bull; "+dt+"</p></div><span class=\\"badge\\" style=\\"color:"+st[1]+";border:1px solid "+st[1]+";background:"+st[1]+"22\\">"+st[0]+"</span></div><p class=\\"meta\\" style=\\"margin-top:10px\\">"+it+"</p><div class=\\"row total\\"><span>Total</span><b>"+fcfa(o.total)+"</b></div></article>"});$("orders").innerHTML=h}).catch(function(){toast("Reseau indisponible",true)})}',
+  '$("vendors").addEventListener("click",function(e){var b=e.target.closest(".add");if(!b)return;add(b.getAttribute("data-v"),b.getAttribute("data-p"))});',
+  '$("cartList").addEventListener("click",function(e){var b=e.target.closest("button[data-a]");if(!b)return;var i=+b.getAttribute("data-i"),a=b.getAttribute("data-a");if(!cart.items[i])return;if(a==="inc")cart.items[i].qty++;if(a==="dec"){cart.items[i].qty--;if(cart.items[i].qty<1)cart.items.splice(i,1)}if(a==="del")cart.items.splice(i,1);if(!cart.items.length)cart.vendorId=null;badge();renderCart()});',
+  'loadVendors();badge();renderCart();'
+].join('');
+
 const PAGE = [
-  '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Enatega Cloud Delivery</title>',
-  '<style>body{font-family:system-ui,sans-serif;margin:0;background:#0f172a;color:#e2e8f0}header{padding:16px;background:#1e293b}main{padding:16px;display:grid;gap:14px;max-width:960px}.card{background:#1e293b;padding:14px;border-radius:10px}h1{margin:0;font-size:20px}h2{font-size:15px;margin:0 0 8px}input,select,button{font:inherit;padding:6px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#e2e8f0}button{background:#38bdf8;color:#082f49;border:0;cursor:pointer;font-weight:600}ul{padding-left:18px;margin:0;font-size:14px}li{margin:3px 0}</style></head><body>',
-  '<header><h1>Enatega Cloud Delivery</h1><small id="stat">chargement...</small></header><main>',
-  '<div class="card"><h2>Vendeurs</h2><ul id="vendors"></ul></div>',
-  '<div class="card"><h2>Commander</h2><select id="v"></select> <input id="pid" placeholder="produit (p101)" size="12"> <input id="qty" type="number" min="1" value="1" style="width:64px"> <input id="name" placeholder="nom"> <input id="phone" placeholder="telephone"> <input id="adr" placeholder="adresse"> <button onclick="order()">Commander</button><p id="msg"></p></div>',
-  '<div class="card"><h2>Commandes</h2><ul id="orders"></ul></div>',
-  '<script>var $=function(i){return document.getElementById(i)};function j(u,o){return fetch(u,o).then(function(r){return r.json()})}',
-  'function refresh(){j("/api/vendors").then(function(v){var h="";v.vendors.forEach(function(x){h+="<li>"+(x.open?"OUVERT":"FERME")+" <b>"+x.name+"</b> - "+x.category+", "+x.city+" : "+x.products.map(function(p){return p.id+" "+p.name+" "+p.price+"F"}).join(" / ")+"</li>"});$("vendors").innerHTML=h;var o="";v.vendors.forEach(function(x){o+="<option value="+x.id+">"+x.name+"</option>"});$("v").innerHTML=o;j("/api/orders").then(function(r){var l="";if(!r.orders.length){l="<li>aucune</li>"}r.orders.forEach(function(x){l+="<li>"+x.id+" - "+x.vendorName+" - "+x.total+"F - "+x.status+(x.riderId?" - "+x.riderId:"")+"</li>"});$("orders").innerHTML=l;$("stat").textContent=v.count+" vendeurs / "+r.total+" commandes"})})}',
-  'function order(){var b={vendorId:$("v").value,items:[{productId:$("pid").value||"p101",qty:+$("qty").value||1}],customer:{name:$("name").value||"Client",phone:$("phone").value||"+22900000000",address:$("adr").value||"Cotonou"}};j("/api/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b)}).then(function(r){$("msg").textContent=r.error?"Erreur: "+r.error:"Commande "+r.id+" creee, total "+r.total+"F";refresh()})}',
-  'refresh();</script></main></body></html>'
+  '<!doctype html><html lang="fr"><head><meta charset="utf-8">',
+  '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
+  '<meta name="theme-color" content="#0b0f14"><title>Enatega - Livraison</title>',
+  '<style>', CSS, '</style></head><body>',
+  '<header class="topbar"><div class="brand"><div class="logo">&#128757;</div><div>Enatega<small>Cotonou &bull; livraison</small></div></div>',
+  '<button class="cartbtn" onclick="go(&quot;cart&quot;)">&#128717;<span class="count" id="cartCount">0</span></button></header>',
+  '<main>',
+  '<section id="v-home" class="view"><div class="hero"><h1>Bienvenue &#128075;</h1><p>Choisissez un restaurant, ajoutez vos plats : nous gerons la livraison.</p></div><div id="vendors" class="grid"></div></section>',
+  '<section id="v-cart" class="view hidden"><h2 class="h2">Votre panier</h2><div id="cartList"></div>',
+  '<div class="card"><div class="row"><span>Sous-total</span><b id="sub">0 FCFA</b></div><div class="row"><span>Frais de livraison</span><b id="fee">0 FCFA</b></div><div class="row total"><span>Total</span><b id="tot">0 FCFA</b></div></div>',
+  '<form id="form" class="card form" onsubmit="return submitOrder(event)"><h3>Infos de livraison</h3>',
+  '<input id="f-name" name="name" autocomplete="name" placeholder="Nom complet (ex : Koffi Dossou)" required>',
+  '<input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Telephone (ex : +229 90 00 00 00)" required>',
+  '<textarea id="f-addr" name="address" autocomplete="street-address" placeholder="Adresse de livraison (ex : Rue 12, Akpakpa, Cotonou)" required></textarea>',
+  '<button type="submit" class="btn-primary" id="submitBtn">Valider la commande</button></form></section>',
+  '<section id="v-orders" class="view hidden"><h2 class="h2">Mes commandes</h2><div id="orders"></div></section>',
+  '</main>',
+  '<nav class="tabbar"><button class="tab active" data-tab="home" onclick="go(&quot;home&quot;)"><span>&#127968;</span>Restaurants</button>',
+  '<button class="tab" data-tab="cart" onclick="go(&quot;cart&quot;)"><span>&#128717;</span>Panier</button>',
+  '<button class="tab" data-tab="orders" onclick="go(&quot;orders&quot;)"><span>&#128230;</span>Commandes</button></nav>',
+  '<div id="toast" class="toast"></div>',
+  '<script>', JS, '</script></body></html>'
 ].join('');
 
 async function api(req, env) {
@@ -49,7 +141,7 @@ async function api(req, env) {
   const vfind = (id) => vendors.filter((v) => v.id === id)[0];
   const ofind = (id) => orders.filter((o) => o.id === id)[0];
 
-  if (p === '/') return HTML(PAGE);
+  if (p === '/') return HTML(PAGE.replace('__FEE__', String(FEE)));
   if (p === '/api/health') return json({ ok: true, ts: Date.now(), kv: !!s.kv, statuses: STATUSES });
   if (p === '/api/vendors' && m === 'GET') {
     const city = url.searchParams.get('city');
