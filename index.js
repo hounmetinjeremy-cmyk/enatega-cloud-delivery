@@ -35,7 +35,7 @@ const PAGE = [
   '<div class="card"><h2>Commander</h2><select id="v"></select> <input id="pid" placeholder="produit (p101)" size="12"> <input id="qty" type="number" min="1" value="1" style="width:64px"> <input id="name" placeholder="nom"> <input id="phone" placeholder="telephone"> <input id="adr" placeholder="adresse"> <button onclick="order()">Commander</button><p id="msg"></p></div>',
   '<div class="card"><h2>Commandes</h2><ul id="orders"></ul></div>',
   '<script>var $=function(i){return document.getElementById(i)};function j(u,o){return fetch(u,o).then(function(r){return r.json()})}',
-  'function refresh(){j("/api/vendors").then(function(v){var h="";v.vendors.forEach(function(x){h+="<li>"+(x.open?"OUVERT":"FERME")+" <b>"+x.name+"</b> - "+x.category+", "+x.city+" : "+x.products.map(function(p){return p.id+" "+p.name+" "+p.price+"F"}).join(" / ")+"</li>"});$("vendors").innerHTML=h;var o="";v.vendors.forEach(function(x){o+="<option value='"+x.id+"'>"+x.name+"</option>"});$("v").innerHTML=o;j("/api/orders").then(function(r){var l="";if(!r.orders.length){l="<li>aucune</li>"}r.orders.forEach(function(x){l+="<li>"+x.id+" - "+x.vendorName+" - "+x.total+"F - "+x.status+(x.riderId?" - "+x.riderId:"")+"</li>"});$("orders").innerHTML=l;$("stat").textContent=v.count+" vendeurs / "+r.total+" commandes"})})}',
+  'function refresh(){j("/api/vendors").then(function(v){var h="";v.vendors.forEach(function(x){h+="<li>"+(x.open?"OUVERT":"FERME")+" <b>"+x.name+"</b> - "+x.category+", "+x.city+" : "+x.products.map(function(p){return p.id+" "+p.name+" "+p.price+"F"}).join(" / ")+"</li>"});$("vendors").innerHTML=h;var o="";v.vendors.forEach(function(x){o+="<option value="+x.id+">"+x.name+"</option>"});$("v").innerHTML=o;j("/api/orders").then(function(r){var l="";if(!r.orders.length){l="<li>aucune</li>"}r.orders.forEach(function(x){l+="<li>"+x.id+" - "+x.vendorName+" - "+x.total+"F - "+x.status+(x.riderId?" - "+x.riderId:"")+"</li>"});$("orders").innerHTML=l;$("stat").textContent=v.count+" vendeurs / "+r.total+" commandes"})})}',
   'function order(){var b={vendorId:$("v").value,items:[{productId:$("pid").value||"p101",qty:+$("qty").value||1}],customer:{name:$("name").value||"Client",phone:$("phone").value||"+22900000000",address:$("adr").value||"Cotonou"}};j("/api/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b)}).then(function(r){$("msg").textContent=r.error?"Erreur: "+r.error:"Commande "+r.id+" creee, total "+r.total+"F";refresh()})}',
   'refresh();</script></main></body></html>'
 ].join('');
@@ -90,8 +90,8 @@ async function api(req, env) {
     if (rid) list = list.filter((o) => o.riderId === rid);
     const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10) || 50));
     const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10) || 0);
-    const page = list.slice(offset, offset + limit);
-    return json({ total: list.length, limit: limit, offset: offset, count: page.length, orders: page });
+    const pg = list.slice(offset, offset + limit);
+    return json({ total: list.length, limit: limit, offset: offset, count: pg.length, orders: pg });
   }
   mm = p.match(/^\/api\/orders\/([^/]+)$/);
   if (mm) {
