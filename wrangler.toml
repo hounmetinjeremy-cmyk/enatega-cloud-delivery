@@ -1,0 +1,12 @@
+name = "enatega-cloud-delivery"
+main = "index.js"
+compatibility_date = "2024-11-01"
+workers_dev = true
+
+[vars]
+ADMIN_TOKEN = "enatega-admin-2024"   # A CHANGER avant usage reel
+
+# Persistance optionnelle : cree un namespace KV puis decommente
+# [[kv_namespaces]]
+# binding = "STATE"
+# id = "<kv_namespace_id>"
