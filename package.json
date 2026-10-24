@@ -1,0 +1,16 @@
+{
+  "name": "enatega-cloud-delivery",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API multi-vendeurs de livraison optimisee Cloudflare Workers",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}
